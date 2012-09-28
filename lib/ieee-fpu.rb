@@ -184,6 +184,10 @@ module IEEE_FPU
     r
   end
 
+  def self.supported_precisions
+    [:single, :double, :extended]
+  end
+
 
     Controlfp = Win32API.new('msvcrt', '_controlfp', 'II', 'I')
   MCW_DN = 0x03000000 # Denormal control mask
@@ -249,9 +253,35 @@ module IEEE_FPU
 
   end
 
-  def self.scope
+  def self.scope(assignments={})
+    v = nil
     s = get_status
-    yield self
+    prc = assignments[:precision]
+    rnd = assignments[:rounding]
+    self.precision = prc if prc && !(Array===prc)
+    self.rounding =rnd if rnd && !(Array===rnd)
+    if Array===prc
+      param = assignments[:parameters] || [nil]*prc.size
+      v = []
+      i = 0
+      prc.each do |p|
+        self.precision = p
+        v << yield(self, param[i])
+        i += 1
+      end
+    elsif Array===rnd
+      param = assignments[:parameters] || [nil]*rnd.size
+      v = []
+      i = 0
+      rnd.each do |r|
+        self.rounding = r
+        v << yield(self, param[i])
+        i += 1
+      end
+    else
+      v = yield(self)
+    end
+    v
     ensure
       set_status s
   end
@@ -278,6 +308,8 @@ module IEEE_FPU
         when FPU_EXTENDED
           p = :extended
       end
+    else
+      p = :double
     end
     p
   end
@@ -309,7 +341,7 @@ module IEEE_FPU
       end
       fpu_setprec v
     else
-      raise Error, "Precision not supported"
+      raise Error, "Precision not supported #{p.inspect}" if p!=:double
     end
     p
   end
@@ -378,6 +410,15 @@ module IEEE_FPU
     end
     r
   end
+
+  def self.supported_precisions
+    if (IEEE_FPU_FENV &&  self.respond_to?(:fesetprec)) || IEEE_FPU_CONTROL
+      [:single, :double, :extened]
+    else
+      [:double]
+    end
+  end
+
 end
 
 end

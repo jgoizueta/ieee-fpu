@@ -25,7 +25,7 @@ Examples:
    IEEE_FPU.scope { |fpu|
      fpu.rounding = :up
      puts IEEE_FPU.rounding              # -> up
-     puts "%.20f"%(1.0+Float::EPSILON/2) # -> 1.0000000000000002220
+     puts "%.20f"%(1.0+Float::EPSILON/2) # -> 1.00000000000000022204
    }
    puts IEEE_FPU.rounding                # -> even
    puts "%.20f"%(1.0+Float::EPSILON/2)   # -> 1.00000000000000000000
@@ -75,7 +75,6 @@ For example, interval arithmetic could be implementes like this:
 == TODO
 
 * Gem with the C extension; avoid compiling under mswin32 if possible (the extension is not needed)
-* Tests
 * Binary gems for mingw32
 * Rename IEEE_FPU, review API design
 * Flt interoperatibility
