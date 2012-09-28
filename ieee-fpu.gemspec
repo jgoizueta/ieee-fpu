@@ -27,6 +27,7 @@ Gem::Specification.new do |s|
     "VERSION",
     "ext/extconf.rb",
     "ext/ieee_fpu_control.c",
+    "ieee-fpu.gemspec",
     "lib/ieee-fpu.rb",
     "test/helper.rb",
     "test/test_ieee-fpu.rb"
