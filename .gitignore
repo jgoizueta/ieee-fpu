@@ -52,3 +52,6 @@ ext/*.so
 ext/*.bundle
 ext/*.log
 ext/Makefile
+
+tmp
+.rvmrc

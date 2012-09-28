@@ -1,9 +1,87 @@
 = ieee-fpu
 
-Description goes here.
+Ruby gem for the control of IEEE compliant FPUs rounding mode and precision (if available).
+
+IEEE_FPU has two writeable properties:
+
+* rounding which has values :even, :up, :down and :zero
+* precision with values :single, :double and :extended
+
+The latter property is not available in all IEEE FPUs
+
+The scope method can be used to set up an scope in which
+FPU properties are modified; when the scope is exited
+the FPU state is restored.
+
+Examples:
+
+   puts IEEE_FPU.rounding                # -> even
+   puts "%.20f"%(1.0+Float::EPSILON/2)   # -> 1.00000000000000000000
+   IEEE_FPU.scope {
+     IEEE_FPU.rounding = :down
+     puts IEEE_FPU.rounding              # -> down
+     puts "%.20f"%(1.0+Float::EPSILON/2) # -> 1.00000000000000000000
+   }
+   IEEE_FPU.scope { |fpu|
+     fpu.rounding = :up
+     puts IEEE_FPU.rounding              # -> up
+     puts "%.20f"%(1.0+Float::EPSILON/2) # -> 1.0000000000000002220
+   }
+   puts IEEE_FPU.rounding                # -> even
+   puts "%.20f"%(1.0+Float::EPSILON/2)   # -> 1.00000000000000000000
+
+   expr = '(3.2-2.0)-1.2'
+   IEEE_FPU.scope {
+     IEEE_FPU.precision = :single           # -> 0.0
+     puts eval(expr)
+   }
+   IEEE_FPU.scope {
+     IEEE_FPU.precision = :double
+     puts eval(expr)                        # -> 2.22044604925031e-16
+   }
+
+Note: IEEE_FPU.precision=:extended has a very limited influence in Ruby
+because all results are casted to Float (double) values.
+Its effect is more noticeable in C/C++ extensions.
+
+FPU parameters can be assigneed passign a hash to the scope method:
+   IEEE_FPU.scope(:precision=>:single) {
+     puts eval(expr)
+   }
+
+An array can be passed for one (only one) of the parameters;
+the block will be repeated with every value of the parameter
+and the results will be collected in an array.
+
+For example this checks the result of an expression in all
+the rounding modes:
+
+  puts IEEE_FPU.scope(:rounding=>[:even,:up,:down,:zero]) {
+    1.0 + Float::EPSILON/2
+  }.inspect
+
+Different parameters can be passed to each call of the block
+by assigning an array to :parameters
+
+For example, interval arithmetic could be implementes like this:
+
+  def sum_intervals(i1,i2)
+    IEEE_FPU.scope(:rounding=>[:down,:up],:parameters=>[0,1]) do |fpu,i|
+      i1[i]+i2[i]
+    end
+  end
+  i = sum_intervals([1.0]*2, [Float::EPSILON/2]*2)
+
+== TODO
+
+* Gem with the C extension; avoid compiling under mswin32 if possible (the extension is not needed)
+* Tests
+* Binary gems for mingw32
+* Rename IEEE_FPU, review API design
+* Flt interoperatibility
 
 == Contributing to ieee-fpu
- 
+
 * Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet.
 * Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it.
 * Fork the project.
@@ -14,6 +92,5 @@ Description goes here.
 
 == Copyright
 
-Copyright (c) 2012 Javier Goizueta. See LICENSE.txt for
+Copyright (c) 2007, 2012 Javier Goizueta. See LICENSE.txt for
 further details.
-
